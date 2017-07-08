@@ -46,3 +46,26 @@
   (if (or (null end) (<= start end))
       (make-pipe start (integers (+ start 1) end))
       nil))
+
+(defun enumerate (pipe &key count key (result pipe))
+  "Go through all (or count) elements if pipe, possibly applying the key function."
+  (if (or (eq pipe empty-pipe) (eql count 0))
+      result
+      (progn
+        (unless (null key) (funcall key (head pipe)))
+        (enumerate (tail pipe) :count (if count (- count 1))
+                   :key key :result result))))
+
+(defun filter (pred pipe)
+  "Keep only items in pipe satisfying pred."
+  (if (funcall pred (head pipe))
+      (make-pipe (head pipe)
+                 (filter pred (tail pipe)))
+      (filter pred (tail pipe))))
+
+(defun sieve (pipe)
+  (make-pipe (head pipe)
+             (filter #'(lambda (x) (/= (mod x (head pipe)) 0))
+                     (sieve (tail pipe)))))
+
+(defparameter *primes* (sieve (integers 2)))
